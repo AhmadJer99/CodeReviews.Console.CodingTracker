@@ -42,9 +42,6 @@ internal static class GenerateRandomData
         RandomRowsNumber = randomRows;
         for (int i = 0; i < RandomRowsNumber; i++)
         {
-            string randomDay = RandomSessionDay();
-
-
             DateTime randomStartTime = RandomTime();
             DateTime randomEndTime = RandomTime();
             while (randomEndTime < randomStartTime | randomEndTime == randomStartTime)
@@ -60,7 +57,6 @@ internal static class GenerateRandomData
                 EndTime = randomEndTime.ToString(timeFormat),
             };
 
-            DatabaseController databaseController = new DatabaseController();
             DatabaseController.InsertRow(randomCodingSession);
         }
     }

@@ -18,16 +18,16 @@ internal class DatabaseController
     private static void InitDatabase()
     {
         using var connection = CreateConnection();
+
+        connection.Open();
+
+        var checkTableCommand = connection.CreateCommand();
+        checkTableCommand.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='codingsession';";
+        var tableName = checkTableCommand.ExecuteScalar() as string;
+
+        if (string.IsNullOrEmpty(tableName))
         {
-            connection.Open();
-
-            var checkTableCommand = connection.CreateCommand();
-            checkTableCommand.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='codingsession';";
-            var tableName = checkTableCommand.ExecuteScalar() as string;
-
-            if (string.IsNullOrEmpty(tableName))
-            {
-                var createQuery = @"
+            var createQuery = @"
                 CREATE TABLE IF NOT EXISTS 
                 codingsession
                    (
@@ -39,9 +39,9 @@ internal class DatabaseController
                    );
                 ";
 
-                connection.Execute(createQuery);
-                GenerateRandomData.GenerateData();
-            }
+            connection.Execute(createQuery);
+            GenerateRandomData.GenerateData();
+
             connection.Close();
         }
     }

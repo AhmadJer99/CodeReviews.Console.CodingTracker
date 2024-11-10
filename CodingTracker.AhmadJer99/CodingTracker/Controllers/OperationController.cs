@@ -91,7 +91,7 @@ internal class OperationController
     {
         WeeklyGoal = AnsiConsole.Ask<int>("[yellow]Set Your Coding Hours Weekly goal: [/]\n");
         AnsiConsole.Markup($"[green]A weekly goal of [lightgoldenrod2_1]{WeeklyGoal} hours[/] has been set successfully![/]\n");
-        AnsiConsole.Markup($"[green]You would need to code [lightgoldenrod2_1]{((float)WeeklyGoal/7):0.0} hours[/] a day to achieve this goal![/]\n");
+        AnsiConsole.Markup($"[green]You would need to code [lightgoldenrod2_1]{((float)WeeklyGoal / 7):0.0} hours[/] a day to achieve this goal![/]\n");
 
         AnsiConsole.Markup($"[white](Press Any Key To Continue)[/]");
         Console.ReadKey();
@@ -190,8 +190,6 @@ internal class OperationController
     internal static void UpdateSession()
     {
         bool doneUpdating = false;
-        DatabaseController databaseController = new();
-
         // list all sessions by a select query annd make them a selectable list to be able to let the user update the session he chooses
         do
         {
