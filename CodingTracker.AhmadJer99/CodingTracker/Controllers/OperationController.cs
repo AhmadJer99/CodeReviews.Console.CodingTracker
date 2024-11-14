@@ -3,6 +3,7 @@ using ConsoleTableExt;
 using Spectre.Console;
 using StopWatchLibrary;
 using System.Configuration;
+using System.Globalization;
 
 namespace CodingTracker.Controllers;
 
@@ -10,6 +11,7 @@ internal class OperationController
 {
     private static int WeeklyGoal { get; set; } = 26;
     private static readonly string? dateFormat = ConfigurationManager.AppSettings.Get("CorrectDateFormat");
+    readonly static string? timeFormat = ConfigurationManager.AppSettings.Get("CorrectTimeFormat");
 
     private enum ReportFilter
     {
@@ -116,8 +118,20 @@ internal class OperationController
                 endTime = Validation.ConvertDateTimeToString(StopWatch.ClockEndTime);
                 break;
             case StartTimeOptions.SpecificTime:
-                startTime = Validation.AskValidTimeInput("Enter start time ");
-                endTime = Validation.AskValidTimeInput("Enter end time ");
+                var start = Validation.AskValidTimeInput("Enter start time ");
+                var end = Validation.AskValidTimeInput("Enter end time ");
+                do
+                {
+                    if (end < start)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error: Invalid Input -End time cant be before starting time!!![/]");
+                        end = Validation.AskValidTimeInput("Enter end time ");
+                    }
+                }
+                while (end < start);
+
+                startTime = Validation.ConvertDateTimeToString(start);
+                endTime = Validation.ConvertDateTimeToString(end);
                 break;
         }
 
@@ -189,6 +203,7 @@ internal class OperationController
 
     internal static void UpdateSession()
     {
+        CultureInfo us = new CultureInfo("en-US");
         bool doneUpdating = false;
         // list all sessions by a select query annd make them a selectable list to be able to let the user update the session he chooses
         do
@@ -206,7 +221,17 @@ internal class OperationController
             switch (updateProperty)
             {
                 case RowUpdateOptions.StartTime:
-                    var startTime = Validation.AskValidTimeInput("Enter new start time ");
+
+                    var newStart = Validation.AskValidTimeInput("Enter new start time ");
+                    var currentEndTime = DateTime.ParseExact(chosenCodingSession.EndTime, timeFormat, us);
+                    if (newStart > currentEndTime)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Update Failed: Invalid Input -New start time cant be after current end time!!![/]\n(Press any key to confirm this error and continue)");
+                        Console.ReadKey();
+                        break;
+                    }
+
+                    var startTime = Validation.ConvertDateTimeToString(newStart);
                     var updatedStartTimeSession = new CodingSession
                     {
                         Id = id,
@@ -219,7 +244,16 @@ internal class OperationController
                     Console.ReadKey();
                     break;
                 case RowUpdateOptions.EndTime:
-                    var endTime = Validation.AskValidTimeInput("Enter new end time ");
+                    var newEnd = Validation.AskValidTimeInput("Enter new end time ");
+                    var currentStartTime = DateTime.ParseExact(chosenCodingSession.StartTime, timeFormat, us);
+                    if (newEnd < currentStartTime)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Update Failed: Invalid Input -New End time cant be before current Start time!!![/]\n(Press any key to confirm this error and continue)");
+                        Console.ReadKey();
+                        break;
+                    }
+
+                    var endTime = Validation.ConvertDateTimeToString(newEnd);
                     var updatedEndTimeSession = new CodingSession
                     {
                         Id = id,

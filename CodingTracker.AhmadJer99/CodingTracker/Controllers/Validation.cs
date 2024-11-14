@@ -7,7 +7,7 @@ namespace CodingTracker.Controllers;
 internal class Validation
 {
     readonly static string? timeFormat = ConfigurationManager.AppSettings.Get("CorrectTimeFormat");
-    internal static string AskValidTimeInput(string messageToConsole)
+    internal static DateTime AskValidTimeInput(string messageToConsole)
     {
         string? readResult;
         bool validEntry = false;
@@ -20,7 +20,7 @@ internal class Validation
             if (readResult != null)
             {
                 if (DateTime.TryParseExact(readResult, timeFormat, us, DateTimeStyles.None, out DateTime cleanTime))
-                    return ConvertDateTimeToString(cleanTime);
+                    return cleanTime;
                 else
                 {
                     AnsiConsole.MarkupLine($"[red]Error: Invalid Input -Please enter the time in the correct format![/]");
@@ -30,7 +30,7 @@ internal class Validation
 
         }
         while (!validEntry);
-        return string.Empty;
+        return DateTime.Today;
     }
     internal static string ConvertDateTimeToString(DateTime timeToConvert)
     {
