@@ -102,6 +102,7 @@ internal class OperationController
     {
         string startTime = "";
         string endTime = "";
+        string sessionDate = "";
 
         var userTimeEntryChoice = AnsiConsole.Prompt(
             new SelectionPrompt<StartTimeOptions>()
@@ -114,9 +115,10 @@ internal class OperationController
                 Console.WriteLine("Unsupported Yet");
                 StopWatch.StartClock();
 
-                startTime = Validation.ConvertDateTimeToString(StopWatch.ClockStartTime);
-                endTime = Validation.ConvertDateTimeToString(StopWatch.ClockEndTime);
+                startTime = Validation.ConvertTimeToString(StopWatch.ClockStartTime);
+                endTime = Validation.ConvertTimeToString(StopWatch.ClockEndTime);
                 break;
+
             case StartTimeOptions.SpecificTime:
                 var start = Validation.AskValidTimeInput("Enter start time ");
                 var end = Validation.AskValidTimeInput("Enter end time ");
@@ -130,14 +132,17 @@ internal class OperationController
                 }
                 while (end < start);
 
-                startTime = Validation.ConvertDateTimeToString(start);
-                endTime = Validation.ConvertDateTimeToString(end);
+                var date = Validation.AskValidDateInput("Enter session's date ");
+
+                sessionDate = Validation.ConvertDateToString(date);
+                startTime = Validation.ConvertTimeToString(start);
+                endTime = Validation.ConvertTimeToString(end);
                 break;
         }
 
         var newCodingSession = new CodingSession
         {
-            SessionDate = DateTime.Now.ToString(dateFormat),
+            SessionDate = sessionDate,
             StartTime = startTime,
             EndTime = endTime
         };
@@ -231,7 +236,7 @@ internal class OperationController
                         break;
                     }
 
-                    var startTime = Validation.ConvertDateTimeToString(newStart);
+                    var startTime = Validation.ConvertTimeToString(newStart);
                     var updatedStartTimeSession = new CodingSession
                     {
                         Id = id,
@@ -253,7 +258,7 @@ internal class OperationController
                         break;
                     }
 
-                    var endTime = Validation.ConvertDateTimeToString(newEnd);
+                    var endTime = Validation.ConvertTimeToString(newEnd);
                     var updatedEndTimeSession = new CodingSession
                     {
                         Id = id,
