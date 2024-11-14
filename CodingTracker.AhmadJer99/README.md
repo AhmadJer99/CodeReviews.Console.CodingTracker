@@ -64,7 +64,7 @@ Console based CRUD application to track coding sessions. Developed using C#, SQL
 
     
 
-# Challenges
+# Difficulties
 
 - It was my first time using Dapper in C#,I had to learn the basic usage of dapper alongside other ORM to access the data base
 - I had to learn how to parse return values of select queries and format it in a good way for the user
