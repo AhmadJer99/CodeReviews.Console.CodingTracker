@@ -17,7 +17,6 @@ public class StopWatch
         task.Start();
         while (!task.IsCompleted)
         {
-
             var keyInput = Console.ReadKey(true);
             if (!Console.KeyAvailable)
             {

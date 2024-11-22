@@ -23,8 +23,7 @@ internal class UserInterface
             {
                 case MenuAction.NewSession:
                     NewSession();
-                    AnsiConsole.Markup("[green]Inserted Successfully!\n[white](Press Any Key To Continue)[/][/]");
-                    Console.ReadKey();
+                    
                     break;
                 case MenuAction.ViewAllSessions:
                     ViewAllSessions();
@@ -36,8 +35,7 @@ internal class UserInterface
                     break;
                 case MenuAction.DeleteSession:
                     DeleteSession();
-                    AnsiConsole.Markup("[green]Deleted Successfully![white](Press Any Key To Continue)[/][/]");
-                    Console.ReadKey();
+                   
                     break;
                 case MenuAction.SetWeeklyGoal:
                     SetWeeklyGoal();

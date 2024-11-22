@@ -4,6 +4,7 @@ using Spectre.Console;
 using StopWatchLibrary;
 using System.Configuration;
 using System.Globalization;
+using System.Text;
 
 namespace CodingTracker.Controllers;
 
@@ -12,12 +13,18 @@ internal class OperationController
     private static int WeeklyGoal { get; set; } = 26;
     private static readonly string? dateFormat = ConfigurationManager.AppSettings.Get("CorrectDateFormat");
     readonly static string? timeFormat = ConfigurationManager.AppSettings.Get("CorrectTimeFormat");
+    private enum UpdateMenu
+    {
+        ChooseSession,
+        Back
+    }
 
     private enum ReportFilter
     {
         PastWeek,
         PastMonth,
-        PastYear
+        PastYear,
+        Back
     }
     private enum SortOrder
     {
@@ -35,7 +42,8 @@ internal class OperationController
     private enum StartTimeOptions
     {
         StopWatch,
-        SpecificTime
+        SpecificTime,
+        Back
     }
 
     private static CodingSession CodingSessionsToSelectableItems(List<CodingSession> codingSessions)
@@ -112,9 +120,8 @@ internal class OperationController
         switch (userTimeEntryChoice)
         {
             case StartTimeOptions.StopWatch:
-                Console.WriteLine("Unsupported Yet");
                 StopWatch.StartClock();
-
+                sessionDate = Validation.ConvertDateToString(DateTime.Now);
                 startTime = Validation.ConvertTimeToString(StopWatch.ClockStartTime);
                 endTime = Validation.ConvertTimeToString(StopWatch.ClockEndTime);
                 break;
@@ -138,6 +145,8 @@ internal class OperationController
                 startTime = Validation.ConvertTimeToString(start);
                 endTime = Validation.ConvertTimeToString(end);
                 break;
+            case StartTimeOptions.Back:
+                return;
         }
 
         var newCodingSession = new CodingSession
@@ -148,7 +157,8 @@ internal class OperationController
         };
 
         DatabaseController.InsertRow(newCodingSession);
-
+        AnsiConsole.Markup("[green]Inserted Successfully!\n[white](Press Any Key To Continue)[/][/]");
+        Console.ReadKey();
     }
 
     internal static void ViewAllSessions()
@@ -162,12 +172,15 @@ internal class OperationController
     }
     internal static void FilteredView()
     {
-        string filter = "";
+        var filterBuilder = new StringBuilder();
 
         var filterType = AnsiConsole.Prompt(
             new SelectionPrompt<ReportFilter>()
             .Title("[yellow]Choose a filter to apply[/]")
             .AddChoices(Enum.GetValues<ReportFilter>()));
+
+        if (filterType == ReportFilter.Back)
+            return;
 
         var orderType = AnsiConsole.Prompt(
             new SelectionPrompt<SortOrder>()
@@ -179,25 +192,23 @@ internal class OperationController
         {
             case ReportFilter.PastWeek:
                 string pastWeek = (DateTime.Now.AddDays(-7)).ToString(dateFormat);
-
-                filter += $"WHERE SessionDate BETWEEN  '{pastWeek}'  AND '{dateTimeToday}' ";
+                filterBuilder.Append($"WHERE SessionDate BETWEEN  '{pastWeek}'  AND '{dateTimeToday}' ");
                 break;
             case ReportFilter.PastMonth:
                 string pastMonth = (DateTime.Now.AddDays(-30)).ToString(dateFormat);
-
-                filter += $"WHERE SessionDate BETWEEN  '{pastMonth}'  AND '{dateTimeToday}' ";
+                filterBuilder.Append($"WHERE SessionDate BETWEEN  '{pastMonth}'  AND '{dateTimeToday}' ");
                 break;
             case ReportFilter.PastYear:
                 string pastYear = (DateTime.Now.AddDays(-365)).ToString(dateFormat);
-
-                filter += $"WHERE SessionDate BETWEEN  '{pastYear}'  AND '{dateTimeToday}' ";
+                filterBuilder.Append($"WHERE SessionDate BETWEEN  '{pastYear}'  AND '{dateTimeToday}' ");
                 break;
         }
         if (orderType == SortOrder.Ascending)
-            filter += "ORDER BY Duration ASC;";
+            filterBuilder.Append($"ORDER BY Duration ASC;");
         else
-            filter += "ORDER BY Duration DESC;";
+            filterBuilder.Append($"ORDER BY Duration DESC;");
 
+        var filter = filterBuilder.ToString();
         var codingSessions = DatabaseController.FilteredRead(filter); // parse the rows into a list of coding sessions , each element is  a row in the table.
 
         var columnNames = new List<string>() { "Id", "Session's Date", "Start Time", "End Time", "Duration(Hrs:Mins)" };
@@ -213,13 +224,21 @@ internal class OperationController
         // list all sessions by a select query annd make them a selectable list to be able to let the user update the session he chooses
         do
         {
+            var menuOption = AnsiConsole.Prompt(
+                new SelectionPrompt<UpdateMenu>()
+                .AddChoices(Enum.GetValues<UpdateMenu>()));
+
+            if (menuOption == UpdateMenu.Back)
+                return;
+
             var codingSessions = DatabaseController.ReadAllRows();
             var chosenCodingSession = CodingSessionsToSelectableItems(codingSessions);
-
+            AnsiConsole.MarkupLine($"[cyan]Updating Session: Session's Date: {chosenCodingSession.SessionDate} | Start Time: {chosenCodingSession.StartTime} - End Time: {chosenCodingSession.EndTime} | Total Duration {chosenCodingSession.Duration}[/]");
             var updateProperty = AnsiConsole.Prompt(
                 new SelectionPrompt<RowUpdateOptions>()
                 .Title("[yellow]Choose what property you want to edit (or select done if you're finished updating): [/]")
                 .AddChoices(Enum.GetValues<RowUpdateOptions>()));
+
 
             int id = chosenCodingSession.Id;
 
@@ -279,11 +298,22 @@ internal class OperationController
     }
     internal static void DeleteSession()
     {
+        var menuOption = AnsiConsole.Prompt(
+                new SelectionPrompt<UpdateMenu>()
+                .AddChoices(Enum.GetValues<UpdateMenu>()));
+
+        if (menuOption == UpdateMenu.Back)
+            return;
+
         var codingSessions = DatabaseController.ReadAllRows();
         var chosenCodingSession = CodingSessionsToSelectableItems(codingSessions);
         // list all sessions by a select query annd make them a selectable list to be able to delete a session
         int chosenRowId = chosenCodingSession.Id;
         DatabaseController.DeleteRow(chosenRowId);
+
+        AnsiConsole.Markup("[green]Deleted Successfully![white](Press Any Key To Continue)[/][/]");
+        Console.ReadKey();
+
     }
 
 }
